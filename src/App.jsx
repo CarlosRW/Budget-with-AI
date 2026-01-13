@@ -436,7 +436,11 @@ function App() {
                 {isMobileMenuOpen && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMobileMenuOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] lg:hidden" />
-                        <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className={`fixed right-0 top-0 h-full w-[280px] z-[70] shadow-2xl p-6 lg:hidden ${darkMode ? 'bg-slate-900 border-l border-slate-800' : 'bg-white'}`}>
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            className={`fixed right-0 top-0 h-full w-[280px] z-[70] shadow-2xl p-6 lg:hidden overflow-y-auto ${darkMode ? 'bg-slate-900 border-l border-slate-800' : 'bg-white'}`}>
                             <div className="flex justify-between items-center mb-8">
                                 <span className="text-[10px] font-black uppercase opacity-50 tracking-widest">{t.settings}</span>
                                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2"><X /></button>
