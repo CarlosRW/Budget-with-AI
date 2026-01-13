@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { analyzeExpense } from '../lib/gemini';
 
-const InputArea = ({ onExpensesFound, accentColor }) => {
+const InputArea = ({ onExpensesFound, accentColor, t }) => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,9 +22,8 @@ const InputArea = ({ onExpensesFound, accentColor }) => {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Ej: Cobré mi salario de 2000 y pagué 50 de internet..."
+        placeholder={t.input_placeholder}
         className={`w-full p-5 rounded-3xl border outline-none focus:ring-2 transition-all h-36 md:h-32 resize-none text-sm leading-relaxed ${
-          // Cambiamos bg-slate-50 por bg-white para que sea realmente blanco en modo claro
           "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
         }`}
         style={{ '--tw-ring-color': accentColor }}
@@ -43,7 +42,7 @@ const InputArea = ({ onExpensesFound, accentColor }) => {
         ) : (
           <>
             <Sparkles size={18} />
-            <span>Analizar con IA</span>
+            <span>{t.analyze_btn}</span>
           </>
         )}
       </button>
