@@ -3,7 +3,7 @@ import {
     Wallet, PlusCircle, Trash2, TrendingUp, TrendingDown,
     Target, Sparkles, Calendar, MessageSquare, Sun,
     Moon, LineChart as ChartIcon, Bell, Check, Download, Coins, Palette, Menu, X, Edit3, CreditCard, Settings,
-    Heart
+    Heart, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
@@ -11,6 +11,8 @@ import * as XLSX from 'xlsx';
 import InputArea from './components/InputArea';
 import { getFinancialAdvice } from './lib/gemini';
 import confetti from 'canvas-confetti';
+import { supabase } from './lib/supabase';
+import Auth from './components/Auth';
 
 const CURRENCIES = [
     { symbol: '$', code: 'USD', country: 'EE.UU.' }, { symbol: '€', code: 'EUR', country: 'Europa' },
@@ -218,6 +220,8 @@ const LANGUAGES = {
 };
 
 function App() {
+    const [session, setSession] = useState(null);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem('expenses')) || []);
     const [initialBalance, setInitialBalance] = useState(() => Number(localStorage.getItem('initialBalance')) || 0);
     const [goals, setGoals] = useState(() => JSON.parse(localStorage.getItem('goals')) || []);
@@ -232,6 +236,40 @@ function App() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPcSettingsOpen, setIsPcSettingsOpen] = useState(false);
     const settingsRef = useRef(null);
+
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            setSession(session);
+            if (session) setShowAuthModal(false);
+
+            // Si el evento es un inicio de sesión exitoso (SIGNED_IN)
+            if (event === 'SIGNED_IN' && session) {
+                await migrateLocalStorageToCloud(session.user.id);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const fetchExpenses = async () => {
+            if (session) {
+                // Si hay sesión, traemos los datos de Supabase
+                const { data, error } = await supabase
+                    .from('expenses')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (!error) setExpenses(data);
+            } else {
+                // Si no hay sesión, usamos localStorage como siempre
+                const localData = JSON.parse(localStorage.getItem('expenses')) || [];
+                setExpenses(localData);
+            }
+        };
+
+        fetchExpenses();
+    }, [session]); // Se vuelve a ejecutar cada vez que la sesión cambie
 
     useEffect(() => {
         localStorage.setItem('expenses', JSON.stringify(expenses));
@@ -386,6 +424,16 @@ function App() {
 
     const deleteGoal = (id) => setGoals(goals.filter(g => g.id !== id));
 
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error signing out:', error.message);
+        } else {
+            // Opcional: Puedes recargar la página para limpiar estados
+            window.location.reload();
+        }
+    };
+
     const exportToExcel = () => {
         const historyData = expenses.map(e => ({
             Fecha: e.date, Descripción: e.label, Categoría: e.category, Monto: e.amount, Tipo: e.amount > 0 ? 'Ingreso' : 'Gasto'
@@ -519,7 +567,11 @@ function App() {
                                             <button
                                                 key={key}
                                                 onClick={() => setLang(key)}
-                                                className={`flex items-center justify-between p-2 rounded-xl border-2 transition-all ${lang === key ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-slate-100 dark:bg-slate-800'}`}
+                                                style={{
+                                                    borderColor: lang === key ? accentColor : 'transparent',
+                                                    backgroundColor: lang === key ? `${accentColor}15` : (darkMode ? '#1e293b' : '#f1f5f9')
+                                                }}
+                                                className="flex items-center justify-between p-2 rounded-xl border-2 transition-all"
                                             >
                                                 <span className="text-lg">{LANGUAGES[key].flag}</span>
                                                 <span className="text-xs font-bold">{LANGUAGES[key].name}</span>
@@ -527,9 +579,24 @@ function App() {
                                         ))}
                                     </div>
                                 </div>
-                                <button onClick={exportToExcel} className="flex items-center gap-3 w-full p-3 rounded-xl bg-blue-500/10 text-blue-500 font-bold text-base">
+                                <button onClick={exportToExcel} style={{ backgroundColor: `${accentColor}10`, color: accentColor }} className="flex items-center gap-3 w-full p-3 rounded-xl font-bold text-base">
                                     <Download size={20} /> {t.export}
                                 </button>
+                                {session && (
+                                    <button
+                                        onClick={handleLogout}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-4 ${
+                                            darkMode 
+                                                ? 'text-red-400 hover:bg-red-500/10' 
+                                                : 'text-red-600 hover:bg-red-50'
+                                        }`}
+                                    >
+                                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
+                                            <LogOut size={20} />
+                                        </div>
+                                        <span className="font-bold">Sign Out</span>
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     </>
@@ -545,7 +612,7 @@ function App() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button onClick={adjustInitialBalance} className={`${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} p-2 px-5 rounded-2xl border shadow-sm group transition-all active:scale-95`}>
-                            <p className="text-[9px] font-black opacity-50 uppercase text-center tracking-widest leading-tight group-hover:text-blue-500 transition-colors">{t.balance}</p>
+                            <p className="text-[9px] font-black opacity-50 uppercase text-center tracking-widest leading-tight transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = accentColor} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>{t.balance}</p>
                             <h2 className={`text-2xl md:text-3xl font-black leading-tight ${currentBalance < 0 ? 'text-rose-500 animate-pulse' : ''}`}>
                                 {formatMoney(currentBalance)}
                             </h2>
@@ -620,7 +687,11 @@ function App() {
                                                             <button
                                                                 key={key}
                                                                 onClick={() => setLang(key)}
-                                                                className={`flex items-center justify-between p-2 rounded-xl border-2 transition-all ${lang === key ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-slate-100 dark:bg-slate-800'}`}
+                                                                style={{
+                                                                    borderColor: lang === key ? accentColor : 'transparent',
+                                                                    backgroundColor: lang === key ? `${accentColor}15` : (darkMode ? '#1e293b' : '#f1f5f9')
+                                                                }}
+                                                                className="flex items-center justify-between p-2 rounded-xl border-2 transition-all"
                                                             >
                                                                 <span className="text-lg">{LANGUAGES[key].flag}</span>
                                                                 <span className="text-xs font-bold">{LANGUAGES[key].name}</span>
@@ -650,6 +721,23 @@ function App() {
                                                 <button onClick={exportToExcel} className="w-full p-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center gap-2 text-[9px] font-black opacity-50 hover:opacity-100 transition-all uppercase">
                                                     <Download size={12} /> {t.export}
                                                 </button>
+
+                                                {/* LOGOUT */}
+                                                {session && (
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-2 ${
+                                                            darkMode 
+                                                                ? 'text-red-400 hover:bg-red-500/10' 
+                                                                : 'text-red-600 hover:bg-red-50'
+                                                        }`}
+                                                    >
+                                                        <div className={`p-1.5 rounded-lg ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
+                                                            <LogOut size={16} />
+                                                        </div>
+                                                        <span className="font-bold text-xs">Sign Out</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
@@ -659,6 +747,28 @@ function App() {
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-3 rounded-2xl border shadow-sm" style={{ color: accentColor }}><Menu size={20} /></button>
                     </div>
                 </header>
+
+                {!session && (
+                  <div 
+                    className="mx-4 mb-6 p-4 rounded-2xl flex items-center justify-between border transition-all"
+                    style={{
+                      backgroundColor: `${accentColor}15`,
+                      borderColor: `${accentColor}30`
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold" style={{ color: accentColor }}>¿Quieres guardar tus datos?</span>
+                      <span className="text-xs opacity-70">Inicia sesión para no perder tus gastos si cambias de navegador.</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowAuthModal(true)}
+                      style={{ backgroundColor: accentColor }}
+                      className="text-white text-xs px-4 py-2 rounded-full font-bold hover:brightness-110 transition-all active:scale-95"
+                    >
+                      Iniciar Sesión
+                    </button>
+                  </div>
+                )}
 
                 <div className="grid lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-7 space-y-8">
@@ -695,7 +805,7 @@ function App() {
                                                     <div className="flex items-center gap-4">
                                                         <span className={`font-black text-base ${e.amount > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{formatMoney(e.amount)}</span>
                                                         <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button onClick={() => editExpense(e.id)} className="p-2 text-blue-500 hover:scale-110 transition-transform"><Edit3 size={16} /></button>
+                                                            <button onClick={() => editExpense(e.id)} style={{ color: accentColor }} className="p-2 hover:scale-110 transition-transform"><Edit3 size={16} /></button>
                                                             <button onClick={() => deleteExpense(e.id)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
                                                         </div>
                                                     </div>
@@ -771,7 +881,7 @@ function App() {
                                             <p className="text-[10px] font-black mt-0.5" style={{ color: accentColor }}>{formatMoney(sub.cost)}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => editSubscription(sub)} className="p-2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"><Edit3 size={14} /></button>
+                                            <button onClick={() => editSubscription(sub)} style={{ color: accentColor }} className="p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Edit3 size={14} /></button>
                                             <button onClick={() => paySubscription(sub)} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform"><Check size={14} /></button>
                                             <button onClick={() => deleteSubscription(sub.id)} className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
                                         </div>
@@ -799,7 +909,7 @@ function App() {
                                     <div key={goal.id} className={`${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'} p-5 rounded-3xl border relative group`}>
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
-                                                <span className={`text-sm font-bold ${goal.completed ? 'text-emerald-500' : ''}`}>
+                                                <span className={`text-xs font-bold ${goal.completed ? 'text-emerald-500' : ''}`}>
                                                     {goal.completed ? '✨ ' : ''}{goal.name}
                                                 </span>
                                                 <p className="text-[10px] font-black mt-1" style={{ color: accentColor }}>
@@ -807,7 +917,7 @@ function App() {
                                                 </p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => editGoal(goal)} className="p-2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"><Edit3 size={14} /></button>
+                                                <button onClick={() => editGoal(goal)} style={{ color: accentColor }} className="p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Edit3 size={14} /></button>
                                                 <button onClick={() => toggleGoal(goal.id)} className={`p-2 rounded-xl transition-all ${goal.completed ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}><Check size={14} /></button>
                                                 <button onClick={() => deleteGoal(goal.id)} className="p-2 rounded-xl bg-rose-500/10 text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
                                             </div>
@@ -881,14 +991,30 @@ function App() {
                     {/* Línea decorativa inferior */}
                     <div className="mt-8 pt-8 border-t border-slate-200/10 flex flex-wrap justify-between gap-4 text-[10px] font-bold uppercase tracking-widest opacity-60">
                         <div className="flex gap-6">
-                            <a href="#" className="hover:text-blue-500 transition-colors">{t.terms}</a>
-                            <a href="#" className="hover:text-blue-500 transition-colors">{t.privacy}</a>
-                            <a href="#" className="hover:text-blue-500 transition-colors">{t.support}</a>
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.terms}</a>
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.privacy}</a>
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.support}</a>
                         </div>
                         <p>{t.optimized}</p>
                     </div>
                 </div>
             </footer>
+
+            {/* Modal de Auth */}
+            {showAuthModal && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setShowAuthModal(false)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                  
+                  <Auth darkMode={darkMode} accentColor={accentColor} />
+                </div>
+              </div>
+            )}
         </div>
     );
 }
