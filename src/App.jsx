@@ -582,19 +582,33 @@ function App() {
                                 <button onClick={exportToExcel} style={{ backgroundColor: `${accentColor}10`, color: accentColor }} className="flex items-center gap-3 w-full p-3 rounded-xl font-bold text-base">
                                     <Download size={20} /> {t.export}
                                 </button>
-                                {session && (
+                                {!session ? (
+                                    <button
+                                        onClick={() => setShowAuthModal(true)}
+                                        style={{
+                                            backgroundColor: `${accentColor}15`,
+                                            color: accentColor
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-auto hover:brightness-110"
+                                    >
+                                        <div style={{ backgroundColor: `${accentColor}20` }} className="p-2 rounded-xl">
+                                            <Wallet size={20} />
+                                        </div>
+                                        <span className="font-bold text-sm">Iniciar Sesión</span>
+                                    </button>
+                                ) : (
                                     <button
                                         onClick={handleLogout}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-4 ${
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-auto ${
                                             darkMode 
                                                 ? 'text-red-400 hover:bg-red-500/10' 
                                                 : 'text-red-600 hover:bg-red-50'
                                         }`}
                                     >
-                                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
+                                        <div className={`p-2 rounded-xl ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
                                             <LogOut size={20} />
                                         </div>
-                                        <span className="font-bold">Sign Out</span>
+                                        <span className="font-bold text-sm">Sign Out</span>
                                     </button>
                                 )}
                             </div>
@@ -722,8 +736,22 @@ function App() {
                                                     <Download size={12} /> {t.export}
                                                 </button>
 
-                                                {/* LOGOUT */}
-                                                {session && (
+                                                {/* AUTH BUTTON */}
+                                                {!session ? (
+                                                    <button
+                                                        onClick={() => setShowAuthModal(true)}
+                                                        style={{
+                                                            backgroundColor: `${accentColor}15`,
+                                                            color: accentColor
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-2 hover:brightness-110"
+                                                    >
+                                                        <div style={{ backgroundColor: `${accentColor}20` }} className="p-1.5 rounded-lg">
+                                                            <Wallet size={16} />
+                                                        </div>
+                                                        <span className="font-bold text-xs">Iniciar Sesión</span>
+                                                    </button>
+                                                ) : (
                                                     <button
                                                         onClick={handleLogout}
                                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 mt-2 ${
