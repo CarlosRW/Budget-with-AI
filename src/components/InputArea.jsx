@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { analyzeExpense } from '../lib/gemini';
 
-const InputArea = ({ onExpensesFound, accentColor, t }) => {
+const InputArea = ({ onExpensesFound, accentColor, t, lang }) => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
     setLoading(true);
-    const results = await analyzeExpense(text);
+    const results = await analyzeExpense(text, lang);
     if (results && results.length > 0) {
       onExpensesFound(results);
       setText("");
@@ -20,6 +20,9 @@ const InputArea = ({ onExpensesFound, accentColor, t }) => {
   return (
     <div className="relative flex flex-col gap-4">
       <textarea
+        id="expense-text"
+        name="expenseText"
+        autoComplete="off"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t.input_placeholder}

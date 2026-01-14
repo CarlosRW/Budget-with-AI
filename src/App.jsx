@@ -3,7 +3,7 @@ import {
     Wallet, PlusCircle, Trash2, TrendingUp, TrendingDown,
     Target, Sparkles, Calendar, MessageSquare, Sun,
     Moon, LineChart as ChartIcon, Bell, Check, Download, Coins, Palette, Menu, X, Edit3, CreditCard, Settings,
-    Heart, LogOut
+    Heart, LogOut, Github, Linkedin, DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
@@ -13,6 +13,8 @@ import { getFinancialAdvice } from './lib/gemini';
 import confetti from 'canvas-confetti';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
+import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const CURRENCIES = [
     { symbol: '$', code: 'USD', country: 'EE.UU.' }, { symbol: '€', code: 'EUR', country: 'Europa' },
@@ -65,16 +67,67 @@ const LANGUAGES = {
         clear_history_confirm: '¿Borrar todo el historial de actividad?',
         edit_expense_label: 'Editar descripción:',
         edit_expense_amount: 'Editar monto (negativo para gastos):',
+        edit_expense_title: 'Editar Gasto',
         add_sub_name: 'Nombre del servicio (ej: Netflix):',
         add_sub_cost: 'Costo mensual:',
         edit_sub_name: 'Editar nombre del servicio:',
         edit_sub_cost: 'Editar costo mensual:',
+        edit_subscription_title: 'Editar Suscripción',
         add_goal_name: 'Meta:',
         add_goal_cost: 'Costo:',
         edit_goal_name: 'Editar nombre de la meta:',
         edit_goal_target: 'Editar monto objetivo:',
+        edit_goal_title: 'Editar Meta',
         goal_revert_confirm: '¿Quieres revertir esta meta? El dinero se devolverá a tu saldo y se borrará el registro del gasto.',
-        made_with: 'Hecho con'
+        made_with: 'Hecho con',
+        login: 'Iniciar Sesión',
+        logout: 'Cerrar Sesión',
+        auth_title: 'Bienvenido a Fince',
+        auth_subtitle: 'Tus datos se sincronizarán en la nube de forma segura.',
+        auth_button: 'Entrar con Email Mágico',
+        auth_sending: 'Enviando...',
+        auth_check_email: '¡Revisa tu email! Te enviamos un enlace mágico de acceso.',
+        login_banner_title: '¿Quieres guardar tus datos?',
+        login_banner_subtitle: 'Inicia sesión para no perder tus gastos si cambias de navegador.',
+        donate: 'Donar',
+        add_sub: '+ Agregar',
+        add_goal: '+ Meta',
+        delete: 'Eliminar',
+        confirm: 'Confirmar',
+        yes: 'Sí',
+        no: 'No',
+        confirm_delete_named: '¿Seguro que quieres eliminar "{name}"?',
+        expense_deleted: 'Gasto eliminado',
+        history_cleared: 'Historial limpio',
+        subscription_deleted: 'Suscripción eliminada',
+        goal_reverted: 'Meta revertida',
+        goal_deleted: 'Meta eliminada',
+        balance_updated: 'Saldo actualizado',
+        expense_updated: 'Gasto actualizado',
+        subscription_updated: 'Suscripción actualizada',
+        goal_updated: 'Meta actualizada',
+        subscription_added: 'Suscripción agregada',
+        goal_added: 'Meta agregada',
+        insufficient_balance_message: 'Saldo insuficiente. Te faltan {amount} para cumplir esta meta.',
+        new_subscription: 'Nueva Suscripción',
+        new_goal: 'Nueva Meta',
+        create: 'Crear',
+        cancel: 'Cancelar',
+        save: 'Guardar',
+        payment_prefix: 'Pago',
+        goal_completed_prefix: 'Meta Cumplida',
+        excel_date: 'Fecha',
+        excel_description: 'Descripción',
+        excel_category: 'Categoría',
+        excel_amount: 'Monto',
+        excel_type: 'Tipo',
+        excel_income: 'Ingreso',
+        excel_expense: 'Gasto',
+        excel_sheet_history: 'Historial',
+        excel_file_prefix: 'Reporte',
+        chart_start: 'Inicio',
+        placeholder_subscription_example: 'Netflix, Spotify, etc...',
+        placeholder_goal_example: 'Vacaciones, Auto, Casa, etc...',
     },
     en: {
         name: 'English',
@@ -112,16 +165,67 @@ const LANGUAGES = {
         clear_history_confirm: 'Clear all activity history?',
         edit_expense_label: 'Edit description:',
         edit_expense_amount: 'Edit amount (negative for expenses):',
+        edit_expense_title: 'Edit Expense',
         add_sub_name: 'Service name (e.g., Netflix):',
         add_sub_cost: 'Monthly cost:',
         edit_sub_name: 'Edit service name:',
         edit_sub_cost: 'Edit monthly cost:',
+        edit_subscription_title: 'Edit Subscription',
         add_goal_name: 'Goal:',
         add_goal_cost: 'Target amount:',
         edit_goal_name: 'Edit goal name:',
         edit_goal_target: 'Edit target amount:',
+        edit_goal_title: 'Edit Goal',
         goal_revert_confirm: 'Revert this goal? Funds will be returned and the record removed.',
-        made_with: 'Made with'
+        made_with: 'Made with',
+        login: 'Sign In',
+        logout: 'Sign Out',
+        auth_title: 'Welcome to Fince',
+        auth_subtitle: 'Your data will sync safely to the cloud.',
+        auth_button: 'Sign in with Magic Link',
+        auth_sending: 'Sending...',
+        auth_check_email: 'Check your email! We sent you a magic link.',
+        login_banner_title: 'Want to save your data?',
+        login_banner_subtitle: 'Sign in to keep your expenses across browsers.',
+        donate: 'Donate',
+        add_sub: '+ Add',
+        add_goal: '+ Goal',
+        delete: 'Delete',
+        confirm: 'Confirm',
+        yes: 'Yes',
+        no: 'No',
+        confirm_delete_named: 'Are you sure you want to delete "{name}"?',
+        expense_deleted: 'Expense deleted',
+        history_cleared: 'History cleared',
+        subscription_deleted: 'Subscription deleted',
+        goal_reverted: 'Goal reverted',
+        goal_deleted: 'Goal deleted',
+        balance_updated: 'Balance updated',
+        expense_updated: 'Expense updated',
+        subscription_updated: 'Subscription updated',
+        goal_updated: 'Goal updated',
+        subscription_added: 'Subscription added',
+        goal_added: 'Goal added',
+        insufficient_balance_message: 'Insufficient balance. You are missing {amount} to reach this goal.',
+        new_subscription: 'New Subscription',
+        new_goal: 'New Goal',
+        create: 'Create',
+        cancel: 'Cancel',
+        save: 'Save',
+        payment_prefix: 'Payment',
+        goal_completed_prefix: 'Goal Completed',
+        excel_date: 'Date',
+        excel_description: 'Description',
+        excel_category: 'Category',
+        excel_amount: 'Amount',
+        excel_type: 'Type',
+        excel_income: 'Income',
+        excel_expense: 'Expense',
+        excel_sheet_history: 'History',
+        excel_file_prefix: 'Report',
+        chart_start: 'Start',
+        placeholder_subscription_example: 'Netflix, Spotify, etc...',
+        placeholder_goal_example: 'Vacation, Car, Home, etc...',
     },
     de: {
         name: 'Deutsch',
@@ -159,16 +263,67 @@ const LANGUAGES = {
         clear_history_confirm: 'Gesamten Verlauf löschen?',
         edit_expense_label: 'Beschreibung bearbeiten:',
         edit_expense_amount: 'Betrag bearbeiten (negativ für Ausgaben):',
+        edit_expense_title: 'Ausgabe bearbeiten',
         add_sub_name: 'Name des Dienstes (z.B. Netflix):',
         add_sub_cost: 'Monatliche Kosten:',
         edit_sub_name: 'Dienstnamen bearbeiten:',
         edit_sub_cost: 'Monatliche Kosten bearbeiten:',
+        edit_subscription_title: 'Abonnement bearbeiten',
         add_goal_name: 'Ziel:',
         add_goal_cost: 'Zielbetrag:',
         edit_goal_name: 'Zielnamen bearbeiten:',
         edit_goal_target: 'Zielbetrag bearbeiten:',
+        edit_goal_title: 'Ziel bearbeiten',
         goal_revert_confirm: 'Ziel rückgängig machen? Geld wird zurückgebucht und Eintrag entfernt.',
-        made_with: 'Erstellt mit'
+        made_with: 'Erstellt mit',
+        login: 'Anmelden',
+        logout: 'Abmelden',
+        auth_title: 'Willkommen bei Fince',
+        auth_subtitle: 'Deine Daten werden sicher in der Cloud synchronisiert.',
+        auth_button: 'Mit Magic-Link anmelden',
+        auth_sending: 'Senden...',
+        auth_check_email: 'Prüfe deine E-Mail! Wir haben dir einen Magic-Link geschickt.',
+        login_banner_title: 'Möchtest du deine Daten speichern?',
+        login_banner_subtitle: 'Melde dich an, um deine Ausgaben über Browser hinweg zu behalten.',
+        donate: 'Spenden',
+        add_sub: '+ Hinzufügen',
+        add_goal: '+ Ziel',
+        delete: 'Löschen',
+        confirm: 'Bestätigen',
+        yes: 'Ja',
+        no: 'Nein',
+        confirm_delete_named: 'Möchten Sie „{name}“ wirklich löschen?',
+        expense_deleted: 'Ausgabe gelöscht',
+        history_cleared: 'Verlauf gelöscht',
+        subscription_deleted: 'Abonnement gelöscht',
+        goal_reverted: 'Ziel zurückgesetzt',
+        goal_deleted: 'Ziel gelöscht',
+        balance_updated: 'Guthaben aktualisiert',
+        expense_updated: 'Ausgabe aktualisiert',
+        subscription_updated: 'Abonnement aktualisiert',
+        goal_updated: 'Ziel aktualisiert',
+        subscription_added: 'Abonnement hinzugefügt',
+        goal_added: 'Ziel hinzugefügt',
+        insufficient_balance_message: 'Unzureichendes Guthaben. Es fehlen {amount}, um dieses Ziel zu erreichen.',
+        new_subscription: 'Neues Abonnement',
+        new_goal: 'Neues Ziel',
+        create: 'Erstellen',
+        cancel: 'Abbrechen',
+        save: 'Speichern',
+        payment_prefix: 'Zahlung',
+        goal_completed_prefix: 'Ziel erreicht',
+        excel_date: 'Datum',
+        excel_description: 'Beschreibung',
+        excel_category: 'Kategorie',
+        excel_amount: 'Betrag',
+        excel_type: 'Typ',
+        excel_income: 'Einnahme',
+        excel_expense: 'Ausgabe',
+        excel_sheet_history: 'Verlauf',
+        excel_file_prefix: 'Bericht',
+        chart_start: 'Start',
+        placeholder_subscription_example: 'Netflix, Spotify, usw.',
+        placeholder_goal_example: 'Urlaub, Auto, Haus, usw.',
     },
     zh: {
         name: '中文',
@@ -206,16 +361,67 @@ const LANGUAGES = {
         clear_history_confirm: '清空所有活动记录？',
         edit_expense_label: '编辑描述：',
         edit_expense_amount: '编辑金额（支出为负）：',
+        edit_expense_title: '编辑支出',
         add_sub_name: '服务名称（例：Netflix）：',
         add_sub_cost: '月费：',
         edit_sub_name: '编辑服务名称：',
         edit_sub_cost: '编辑月费：',
+        edit_subscription_title: '编辑订阅',
         add_goal_name: '目标：',
         add_goal_cost: '目标金额：',
         edit_goal_name: '编辑目标名称：',
         edit_goal_target: '编辑目标金额：',
+        edit_goal_title: '编辑目标',
         goal_revert_confirm: '要撤销此目标吗？资金将返还并删除记录。',
-        made_with: '用心制作'
+        made_with: '用心制作',
+        login: '登录',
+        logout: '退出登录',
+        auth_title: '欢迎使用 Fince',
+        auth_subtitle: '您的数据将安全地同步到云端。',
+        auth_button: '使用魔术链接登录',
+        auth_sending: '正在发送…',
+        auth_check_email: '请检查邮箱！我们已发送魔术链接。',
+        login_banner_title: '要保存您的数据吗？',
+        login_banner_subtitle: '登录以在不同浏览器间保持您的支出记录。',
+        donate: '捐赠',
+        add_sub: '+ 添加',
+        add_goal: '+ 目标',
+        delete: '删除',
+        confirm: '确认',
+        yes: '是',
+        no: '否',
+        confirm_delete_named: '确定要删除“{name}”吗？',
+        expense_deleted: '支出已删除',
+        history_cleared: '历史已清空',
+        subscription_deleted: '订阅已删除',
+        goal_reverted: '目标已撤销',
+        goal_deleted: '目标已删除',
+        balance_updated: '余额已更新',
+        expense_updated: '支出已更新',
+        subscription_updated: '订阅已更新',
+        goal_updated: '目标已更新',
+        subscription_added: '订阅已添加',
+        goal_added: '目标已添加',
+        insufficient_balance_message: '余额不足。还差 {amount} 才能完成该目标。',
+        new_subscription: '新订阅',
+        new_goal: '新目标',
+        create: '创建',
+        cancel: '取消',
+        save: '保存',
+        payment_prefix: '支付',
+        goal_completed_prefix: '目标达成',
+        excel_date: '日期',
+        excel_description: '描述',
+        excel_category: '类别',
+        excel_amount: '金额',
+        excel_type: '类型',
+        excel_income: '收入',
+        excel_expense: '支出',
+        excel_sheet_history: '历史',
+        excel_file_prefix: '报告',
+        chart_start: '开始',
+        placeholder_subscription_example: 'Netflix、Spotify 等…',
+        placeholder_goal_example: '度假、汽车、房子 等…',
     }
 };
 
@@ -235,41 +441,128 @@ function App() {
     const [loadingAdvice, setLoadingAdvice] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPcSettingsOpen, setIsPcSettingsOpen] = useState(false);
+    const [editingExpense, setEditingExpense] = useState(null);
+    const [editingSubscription, setEditingSubscription] = useState(null);
+    const [editingGoal, setEditingGoal] = useState(null);
+    const [editingBalance, setEditingBalance] = useState(false);
+    const [addingSubscription, setAddingSubscription] = useState(false);
+    const [addingGoal, setAddingGoal] = useState(false);
+    const [editBalanceAmount, setEditBalanceAmount] = useState('');
+    const [editLabel, setEditLabel] = useState('');
+    const [editAmount, setEditAmount] = useState('');
+    const [editName, setEditName] = useState('');
+    const [editCost, setEditCost] = useState('');
+    const [editTarget, setEditTarget] = useState('');
+    const [newSubName, setNewSubName] = useState('');
+    const [newSubCost, setNewSubCost] = useState('');
+    const [newGoalName, setNewGoalName] = useState('');
+    const [newGoalTarget, setNewGoalTarget] = useState('');
+    const [dataLoaded, setDataLoaded] = useState(false);
     const settingsRef = useRef(null);
+
+    // Deduplica y mergea gastos remotos + locales por id y por heurística label+amount+date
+    const mergeExpenses = (remote = [], local = []) => {
+        const remoteMap = new Map();
+        const remoteHeuristic = new Set();
+
+        // Indexar remotos por id y por heurística
+        remote.forEach((r) => {
+            if (r.id) remoteMap.set(r.id, r);
+            const heurKey = `${r.label}|${r.amount}|${r.date}`;
+            remoteHeuristic.add(heurKey);
+        });
+
+        // Mergear: empezar con remotos, añadir locales no duplicados
+        const merged = [...remote];
+        local.forEach((l) => {
+            const localHeurKey = `${l.label}|${l.amount}|${l.date}`;
+            const isDuplicate = l.id ? remoteMap.has(l.id) : remoteHeuristic.has(localHeurKey);
+            if (!isDuplicate) {
+                merged.push(l);
+            }
+        });
+
+        return merged;
+    };
+
+    // Sincroniza gastos a Supabase: borra viejos e inserta nuevos del usuario
+    const syncExpensesToSupabase = async (userId, expensesToSync) => {
+        if (!userId) return;
+
+        const { error: deleteError } = await supabase
+            .from('expenses')
+            .delete()
+            .eq('user_id', userId);
+
+        if (deleteError) {
+            console.error('Error clearing remote expenses:', deleteError.message);
+            return;
+        }
+
+        if (!expensesToSync || !expensesToSync.length) return;
+
+        const payload = expensesToSync.map((e) => ({
+            user_id: userId,
+            label: e.label,
+            amount: e.amount,
+            category: e.category || 'General',
+            date: e.date,
+            goal_id: e.goalId || null,
+        }));
+
+        const { error: insertError } = await supabase.from('expenses').insert(payload);
+        if (insertError) console.error('Error syncing expenses:', insertError.message);
+    };
 
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             setSession(session);
             if (session) setShowAuthModal(false);
-
-            // Si el evento es un inicio de sesión exitoso (SIGNED_IN)
-            if (event === 'SIGNED_IN' && session) {
-                await migrateLocalStorageToCloud(session.user.id);
-            }
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
     useEffect(() => {
-        const fetchExpenses = async () => {
+        const fetchAndMergeExpenses = async () => {
+            setDataLoaded(false);
+
             if (session) {
-                // Si hay sesión, traemos los datos de Supabase
-                const { data, error } = await supabase
+                // Cargar remotos
+                const { data: remoteData, error: remoteError } = await supabase
                     .from('expenses')
                     .select('*')
+                    .eq('user_id', session.user.id)
                     .order('created_at', { ascending: false });
-                
-                if (!error) setExpenses(data);
+
+                if (remoteError) {
+                    console.error('Error fetching expenses:', remoteError.message);
+                    setDataLoaded(true);
+                    return;
+                }
+
+                // Cargar locales
+                const localData = JSON.parse(localStorage.getItem('expenses')) || [];
+
+                // Mergear sin duplicados
+                const mergedData = mergeExpenses(remoteData || [], localData);
+
+                // Establecer estado unificado
+                setExpenses(mergedData);
+
+                // Sincronizar merged a Supabase
+                await syncExpensesToSupabase(session.user.id, mergedData);
             } else {
-                // Si no hay sesión, usamos localStorage como siempre
+                // Sin sesión: usar solo localStorage
                 const localData = JSON.parse(localStorage.getItem('expenses')) || [];
                 setExpenses(localData);
             }
+
+            setDataLoaded(true);
         };
 
-        fetchExpenses();
-    }, [session]); // Se vuelve a ejecutar cada vez que la sesión cambie
+        fetchAndMergeExpenses();
+    }, [session]);
 
     useEffect(() => {
         localStorage.setItem('expenses', JSON.stringify(expenses));
@@ -304,19 +597,14 @@ function App() {
 
     // --- LÓGICA DE SALDO ---
     const adjustInitialBalance = () => {
-        const newVal = prompt(t.balance_prompt, initialBalance);
-        if (newVal !== null && !isNaN(newVal)) {
-            setInitialBalance(Number(newVal));
-            confetti({ particleCount: 30, spread: 50 });
-        }
+        setEditingBalance(true);
+        setEditBalanceAmount(initialBalance.toString());
     };
 
     // --- LÓGICA DE GASTOS Y EDICIÓN ---
     const handleNewItems = (items) => {
         const today = new Date();
-        // Formato estándar DD/MM/YYYY
         const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-
         const itemsWithDate = items.map(item => ({
             ...item,
             date: dateStr,
@@ -325,59 +613,162 @@ function App() {
         setExpenses([...expenses, ...itemsWithDate]);
     };
 
-    const deleteExpense = (id) => setExpenses(expenses.filter(e => e.id !== id));
+    const deleteExpense = (id) => {
+        const expense = expenses.find(e => e.id === id);
+        const toastId = toast((t_inner) => (
+            <div className="flex flex-col gap-2">
+                <p>{t.confirm_delete_named.replace('{name}', expense.label)}</p>
+                <div className="flex gap-2 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(toastId)}
+                        className="px-3 py-1 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-white"
+                    >
+                        {t.cancel}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setExpenses(expenses.filter(e => e.id !== id));
+                            toast.success(t.expense_deleted, {
+                                style: {
+                                    borderRadius: '16px',
+                                    background: '#0f172a',
+                                    color: '#fff',
+                                }
+                            });
+                            toast.dismiss(toastId);
+                        }}
+                        className="px-3 py-1 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        {t.delete}
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: Infinity,
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                border: '1px solid #475569'
+            }
+        });
+    };
 
     const clearActivity = () => {
-        if (window.confirm(t.clear_history_confirm)) {
-            setExpenses([]);
-            confetti({ particleCount: 40, spread: 50 });
-        }
+        // Mostrar toast de confirmación
+        const toastId = toast((t_inner) => (
+            <div className="flex flex-col gap-2">
+                <p>{t.clear_history_confirm}</p>
+                <div className="flex gap-2 justify-end">
+                    <button
+                        onClick={() => {
+                            toast.dismiss(toastId);
+                        }}
+                        className="px-3 py-1 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-white"
+                    >
+                        {t.cancel}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setExpenses([]);
+                            confetti({ particleCount: 40, spread: 50 });
+                            toast.success(t.history_cleared, {
+                                style: {
+                                    borderRadius: '16px',
+                                    background: '#0f172a',
+                                    color: '#fff',
+                                }
+                            });
+                            toast.dismiss(toastId);
+                        }}
+                        className="px-3 py-1 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        {t.confirm}
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: Infinity,
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                border: '1px solid #475569'
+            }
+        });
     };
 
     const editExpense = (id) => {
         const item = expenses.find(e => e.id === id);
-        const newLabel = prompt(t.edit_expense_label, item.label);
-        const newAmount = prompt(t.edit_expense_amount, item.amount);
-        if (newLabel && !isNaN(newAmount)) {
-            setExpenses(expenses.map(e => e.id === id ? { ...e, label: newLabel, amount: Number(newAmount) } : e));
-        }
+        setEditingExpense(id);
+        setEditLabel(item.label);
+        setEditAmount(item.amount.toString());
     };
 
     // --- LÓGICA DE SUSCRIPCIONES ---
     const editSubscription = (sub) => {
-        const newName = prompt(t.edit_sub_name, sub.name);
-        const newCost = prompt(t.edit_sub_cost, sub.cost);
-        if (newName && !isNaN(newCost)) {
-            setSubscriptions(subscriptions.map(s =>
-                s.id === sub.id ? { ...s, name: newName, cost: Number(newCost) } : s
-            ));
-        }
+        setEditingSubscription(sub.id);
+        setEditName(sub.name);
+        setEditCost(sub.cost.toString());
     };
 
     const addSubscription = () => {
-        const name = prompt(t.add_sub_name);
-        const cost = prompt(t.add_sub_cost);
-        if (name && !isNaN(cost)) {
-            setSubscriptions([...subscriptions, { id: Date.now(), name, cost: Number(cost) }]);
-        }
+        setAddingSubscription(true);
+        setNewSubName('');
+        setNewSubCost('');
     };
 
     const paySubscription = (sub) => {
-        handleNewItems([{ label: `Pago ${sub.name}`, amount: -sub.cost, category: 'Suscripciones' }]);
+        handleNewItems([{ label: `${t.payment_prefix} ${sub.name}`, amount: -sub.cost, category: t.subs }]);
         confetti({ particleCount: 40, colors: [accentColor, '#ffffff'] });
     };
 
-    const deleteSubscription = (id) => setSubscriptions(subscriptions.filter(s => s.id !== id));
+    const deleteSubscription = (id) => {
+        const sub = subscriptions.find(s => s.id === id);
+        const toastId = toast((t_inner) => (
+            <div className="flex flex-col gap-2">
+                <p>{t.confirm_delete_named.replace('{name}', sub.name)}</p>
+                <div className="flex gap-2 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(toastId)}
+                        className="px-3 py-1 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-white"
+                    >
+                        {t.cancel}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSubscriptions(subscriptions.filter(s => s.id !== id));
+                            toast.success(t.subscription_deleted, {
+                                style: {
+                                    borderRadius: '16px',
+                                    background: '#0f172a',
+                                    color: '#fff',
+                                }
+                            });
+                            toast.dismiss(toastId);
+                        }}
+                        className="px-3 py-1 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        {t.delete}
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: Infinity,
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                border: '1px solid #475569'
+            }
+        });
+    };
 
     // --- LÓGICA DE METAS ---
     const editGoal = (goal) => {
-        const newName = prompt(t.edit_goal_name, goal.name);
-        const newTarget = prompt(t.edit_goal_target, goal.target);
-        if (newName && !isNaN(newTarget)) {
-            setGoals(goals.map(g =>
-                g.id === goal.id ? { ...g, name: newName, target: Number(newTarget) } : g
-            ));
-        }
+        setEditingGoal(goal.id);
+        setEditName(goal.name);
+        setEditTarget(goal.target.toString());
     };
 
     const toggleGoal = (id) => {
@@ -387,7 +778,13 @@ function App() {
         if (!goal.completed) {
             // Validación de saldo suficiente
             if (currentBalance < goal.target) {
-                alert(`Saldo insuficiente. Te faltan ${formatMoney(goal.target - currentBalance)} para cumplir esta meta.`);
+                toast.error(t.insufficient_balance_message.replace('{amount}', formatMoney(goal.target - currentBalance)), {
+                    style: {
+                        borderRadius: '16px',
+                        background: '#1e293b',
+                        color: '#fff',
+                    },
+                });
                 return;
             }
 
@@ -396,9 +793,9 @@ function App() {
 
             // 2. Creamos un gasto automático vinculado a esta meta
             const completionExpense = {
-                label: `Meta Cumplida: ${goal.name}`,
+                label: `${t.goal_completed_prefix}: ${goal.name}`,
                 amount: -goal.target,
-                category: 'Metas',
+                category: t.goals,
                 goalId: id // Importante para poder revertirlo luego
             };
             handleNewItems([completionExpense]);
@@ -412,17 +809,87 @@ function App() {
 
         } else {
             // Si ya estaba completada y el usuario la desmarca (REVERTIR)
-            if (window.confirm(t.goal_revert_confirm)) {
-                // 1. Desmarcamos la meta
-                setGoals(goals.map(g => g.id === id ? { ...g, completed: false } : g));
-
-                // 2. Buscamos y eliminamos el gasto que se generó automáticamente
-                setExpenses(expenses.filter(e => e.goalId !== id));
-            }
+            const toastId = toast((t_inner) => (
+                <div className="flex flex-col gap-2">
+                    <p>{t.goal_revert_confirm}</p>
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => toast.dismiss(toastId)}
+                            className="px-3 py-1 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-white"
+                        >
+                            {t.no}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setGoals(goals.map(g => g.id === id ? { ...g, completed: false } : g));
+                                setExpenses(expenses.filter(e => e.goalId !== id));
+                                toast.success(t.goal_reverted, {
+                                    style: {
+                                        borderRadius: '16px',
+                                        background: '#0f172a',
+                                        color: '#fff',
+                                    }
+                                });
+                                toast.dismiss(toastId);
+                            }}
+                            className="px-3 py-1 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                            {t.yes}
+                        </button>
+                    </div>
+                </div>
+            ), {
+                duration: Infinity,
+                style: {
+                    borderRadius: '16px',
+                    background: '#1e293b',
+                    color: '#fff',
+                    border: '1px solid #475569'
+                }
+            });
         }
     };
 
-    const deleteGoal = (id) => setGoals(goals.filter(g => g.id !== id));
+    const deleteGoal = (id) => {
+        const goal = goals.find(g => g.id === id);
+        const toastId = toast((t_inner) => (
+            <div className="flex flex-col gap-2">
+                <p>{t.confirm_delete_named.replace('{name}', goal.name)}</p>
+                <div className="flex gap-2 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(toastId)}
+                        className="px-3 py-1 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-white"
+                    >
+                        {t.cancel}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setGoals(goals.filter(g => g.id !== id));
+                            toast.success(t.goal_deleted, {
+                                style: {
+                                    borderRadius: '16px',
+                                    background: '#0f172a',
+                                    color: '#fff',
+                                }
+                            });
+                            toast.dismiss(toastId);
+                        }}
+                        className="px-3 py-1 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    >
+                        {t.delete}
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: Infinity,
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                border: '1px solid #475569'
+            }
+        });
+    };
 
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
@@ -436,12 +903,16 @@ function App() {
 
     const exportToExcel = () => {
         const historyData = expenses.map(e => ({
-            Fecha: e.date, Descripción: e.label, Categoría: e.category, Monto: e.amount, Tipo: e.amount > 0 ? 'Ingreso' : 'Gasto'
+            [t.excel_date]: e.date,
+            [t.excel_description]: e.label,
+            [t.excel_category]: e.category,
+            [t.excel_amount]: e.amount,
+            [t.excel_type]: e.amount > 0 ? t.excel_income : t.excel_expense
         }));
         const wb = XLSX.utils.book_new();
         const wsHistory = XLSX.utils.json_to_sheet(historyData);
-        XLSX.utils.book_append_sheet(wb, wsHistory, "Historial");
-        XLSX.writeFile(wb, `Reporte_${currency.code}_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, wsHistory, t.excel_sheet_history);
+        XLSX.writeFile(wb, `${t.excel_file_prefix}_${currency.code}_${new Date().toLocaleDateString()}.xlsx`);
         confetti({ particleCount: 100, spread: 70 });
     };
 
@@ -473,10 +944,11 @@ function App() {
         });
 
         // 3. El punto de inicio del gráfico
-        return [{ name: 'Inicio', balance: initialBalance }, ...data];
+        return [{ name: t.chart_start, balance: initialBalance }, ...data];
     }, [expenses, initialBalance]);
 
     return (
+        <>
         <div className={`${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} min-h-screen transition-colors duration-500 font-sans`}>
 
             {/* --- SIDEBAR MÓVIL --- */}
@@ -594,7 +1066,7 @@ function App() {
                                         <div style={{ backgroundColor: `${accentColor}20` }} className="p-2 rounded-xl">
                                             <Wallet size={20} />
                                         </div>
-                                        <span className="font-bold text-sm">Iniciar Sesión</span>
+                                        <span className="font-bold text-sm">{t.login}</span>
                                     </button>
                                 ) : (
                                     <button
@@ -608,7 +1080,7 @@ function App() {
                                         <div className={`p-2 rounded-xl ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
                                             <LogOut size={20} />
                                         </div>
-                                        <span className="font-bold text-sm">Sign Out</span>
+                                        <span className="font-bold text-sm">{t.logout}</span>
                                     </button>
                                 )}
                             </div>
@@ -749,7 +1221,7 @@ function App() {
                                                         <div style={{ backgroundColor: `${accentColor}20` }} className="p-1.5 rounded-lg">
                                                             <Wallet size={16} />
                                                         </div>
-                                                        <span className="font-bold text-xs">Iniciar Sesión</span>
+                                                        <span className="font-bold text-xs">{t.login}</span>
                                                     </button>
                                                 ) : (
                                                     <button
@@ -763,7 +1235,7 @@ function App() {
                                                         <div className={`p-1.5 rounded-lg ${darkMode ? 'bg-red-500/10' : 'bg-red-100'}`}>
                                                             <LogOut size={16} />
                                                         </div>
-                                                        <span className="font-bold text-xs">Sign Out</span>
+                                                        <span className="font-bold text-xs">{t.logout}</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -785,15 +1257,15 @@ function App() {
                     }}
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold" style={{ color: accentColor }}>¿Quieres guardar tus datos?</span>
-                      <span className="text-xs opacity-70">Inicia sesión para no perder tus gastos si cambias de navegador.</span>
+                      <span className="text-sm font-bold" style={{ color: accentColor }}>{t.login_banner_title}</span>
+                      <span className="text-xs opacity-70">{t.login_banner_subtitle}</span>
                     </div>
                     <button 
                       onClick={() => setShowAuthModal(true)}
                       style={{ backgroundColor: accentColor }}
                       className="text-white text-xs px-4 py-2 rounded-full font-bold hover:brightness-110 transition-all active:scale-95"
                     >
-                      Iniciar Sesión
+                                            {t.login}
                     </button>
                   </div>
                 )}
@@ -801,7 +1273,7 @@ function App() {
                 <div className="grid lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-7 space-y-8">
                         <section className={`${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} p-6 rounded-3xl border shadow-sm`}>
-                            <InputArea onExpensesFound={handleNewItems} accentColor={accentColor} t={t} />
+                            <InputArea onExpensesFound={handleNewItems} accentColor={accentColor} t={t} lang={lang} />
                         </section>
 
                         <section className="space-y-4">
@@ -851,7 +1323,7 @@ function App() {
                         <section style={{ backgroundColor: darkMode ? `${accentColor}15` : accentColor, borderColor: `${accentColor}30` }} className="p-8 rounded-[2.5rem] shadow-xl border text-white relative overflow-hidden">
                             <h3 className="font-bold mb-4 text-lg flex items-center gap-2"><Sparkles size={18} /> {t.ia_ask}</h3>
                             <div className="relative mb-4">
-                                <input type="text" placeholder={t.ia_placeholder} value={adviceTopic} onChange={(e) => setAdviceTopic(e.target.value)}
+                                <input type="text" id="ai-topic" name="aiTopic" placeholder={t.ia_placeholder} value={adviceTopic} onChange={(e) => setAdviceTopic(e.target.value)}
                                     className={`w-full rounded-2xl py-4 pl-5 pr-14 text-sm outline-none transition-all ${darkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-white text-slate-900 shadow-inner'}`} />
                                 <button
                                     onClick={async () => { if (!adviceTopic) return; setLoadingAdvice(true); setAdvice(await getFinancialAdvice(expenses, currentBalance, adviceTopic, lang)); setLoadingAdvice(false); }}
@@ -895,8 +1367,9 @@ function App() {
                                 </h3>
                                 <button
                                     onClick={addSubscription}
-                                    style={{ backgroundColor: `${accentColor}20`, color: accentColor }} // Fondo con 20% opacidad
+                                    style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
                                     className="p-2 rounded-full hover:brightness-90 transition-all"
+                                    title={t.add_sub}
                                 >
                                     <PlusCircle size={18} />
                                 </button>
@@ -925,9 +1398,10 @@ function App() {
                                     <Target size={16} className="text-rose-500" /> {t.goals}
                                 </h3>
                                 <button
-                                    onClick={() => { const n = prompt(t.add_goal_name); const c = prompt(t.add_goal_cost); if (n && c) setGoals([...goals, { name: n, target: Number(c), id: Date.now(), completed: false }]); }}
+                                    onClick={() => { setAddingGoal(true); setNewGoalName(''); setNewGoalTarget(''); }}
                                     style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
                                     className="p-2 rounded-full hover:brightness-90 transition-all"
+                                    title={t.add_goal}
                                 >
                                     <PlusCircle size={18} />
                                 </button>
@@ -963,11 +1437,11 @@ function App() {
 
             {/* --- FOOTER MODERNO --- */}
             <footer className={`mt-20 pb-10 px-4 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                <div className={`max-w-7xl mx-auto p-8 rounded-[2.5rem] border transition-all ${darkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+                <div className={`max-w-7xl mx-auto p-6 md:p-8 rounded-[2.5rem] border transition-all ${darkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
                         {/* Logo y Eslogan */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
+                        <div className="space-y-3 text-center md:text-left">
+                            <div className="flex items-center gap-2 justify-center md:justify-start">
                                 <div style={{ backgroundColor: accentColor }} className="p-2 rounded-xl text-white">
                                     <Wallet size={18} />
                                 </div>
@@ -975,21 +1449,21 @@ function App() {
                                     Fince
                                 </span>
                             </div>
-                            <p className="text-sm font-medium leading-relaxed">
+                            <p className="text-sm font-medium leading-relaxed max-w-xs mx-auto md:mx-0">
                                 {t.tagline}
                             </p>
                         </div>
 
                         {/* Stats Rápidos o Info */}
-                        <div className="flex flex-col gap-2 border-l border-r border-slate-200/20 px-0 md:px-10">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold uppercase tracking-widest">{t.system_status}</span>
+                        <div className="flex flex-col gap-3 md:border-l md:border-r border-slate-200/20 md:px-10">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">{t.system_status}</span>
                                 <span className="flex items-center gap-2 text-emerald-500 text-xs font-bold">
                                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> {t.system_ok}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold uppercase tracking-widest">{t.privacy}</span>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">{t.privacy}</span>
                                 <span className={`text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                                     {t.privacy_note}
                                 </span>
@@ -997,18 +1471,69 @@ function App() {
                         </div>
 
                         {/* Créditos y Versión */}
-                        <div className="text-right space-y-2">
-                            <p className="text-sm font-black">
-                                © {new Date().getFullYear()} — Carlos Ramírez Wong — {t.made_with} <Heart size={14} className="inline text-red-500" />
+                        <div className="space-y-3 text-center md:text-right">
+                            <p className="text-xs md:text-sm font-black flex flex-wrap items-center justify-center md:justify-end gap-1">
+                                <span>© {new Date().getFullYear()}</span>
+                                <span className="hidden md:inline">—</span>
+                                <span>Carlos Ramírez Wong</span>
+                                <span className="hidden md:inline">—</span>
+                                <span className="flex items-center gap-1">{t.made_with} <Heart size={14} className="inline text-red-500" /></span>
                             </p>
-                            <div className="flex justify-end gap-3">
+                            {/* Links Sociales */}
+                            <div className="flex flex-wrap justify-center md:justify-end gap-3 items-center">
+                                <a 
+                                    href="https://github.com/carlosrw" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg transition-all hover:scale-110"
+                                    style={{ color: darkMode ? '#94a3b8' : '#64748b' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = accentColor}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = darkMode ? '#94a3b8' : '#64748b'}
+                                >
+                                    <Github size={18} />
+                                </a>
+                                <a 
+                                    href="https://linkedin.com/in/carlosrw" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg transition-all hover:scale-110"
+                                    style={{ color: darkMode ? '#94a3b8' : '#64748b' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#0077b5'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = darkMode ? '#94a3b8' : '#64748b'}
+                                >
+                                    <Linkedin size={18} />
+                                </a>
+                                <a 
+                                    href="https://paypal.me/carlosrw231005" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium"
+                                    style={{ 
+                                        backgroundColor: '#00457C',
+                                        color: 'white'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#003a63';
+                                        e.currentTarget.style.transform = 'scale(1.05)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#00457C';
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    title={`${t.donate} via PayPal`}
+                                >
+                                    <DollarSign size={20} strokeWidth={2.5} />
+                                    <span className="hidden sm:inline text-sm">{t.donate}</span>
+                                </a>
+                            </div>
+                            <div className="flex flex-wrap justify-center md:justify-end gap-3 items-center">
                                 <span className={`text-[10px] px-3 py-1 rounded-full border ${darkMode ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-50'}`}>
                                     v2.0.26
                                 </span>
                                 <button
                                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                     style={{ color: accentColor }}
-                                    className="text-[10px] font-black uppercase tracking-tighter hover:underline"
+                                    className="text-[10px] font-black uppercase tracking-tighter hover:underline transition-colors"
                                 >
                                     {t.back_to_top}
                                 </button>
@@ -1017,13 +1542,13 @@ function App() {
                     </div>
 
                     {/* Línea decorativa inferior */}
-                    <div className="mt-8 pt-8 border-t border-slate-200/10 flex flex-wrap justify-between gap-4 text-[10px] font-bold uppercase tracking-widest opacity-60">
-                        <div className="flex gap-6">
-                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.terms}</a>
-                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.privacy}</a>
-                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-colors hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.support}</a>
+                    <div className="mt-8 pt-8 border-t border-slate-200/10 flex flex-col md:flex-row flex-wrap justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest opacity-60">
+                        <div className="flex flex-wrap gap-4 md:gap-6 justify-center md:justify-start">
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-all hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.terms}</a>
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-all hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.privacy}</a>
+                            <a href="#" style={{ '--hover-color': accentColor }} className="transition-all hover:opacity-100" onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}>{t.support}</a>
                         </div>
-                        <p>{t.optimized}</p>
+                        <p className="text-center md:text-right">{t.optimized}</p>
                     </div>
                 </div>
             </footer>
@@ -1039,11 +1564,403 @@ function App() {
                     <X size={24} />
                   </button>
                   
-                  <Auth darkMode={darkMode} accentColor={accentColor} />
+                  <Auth darkMode={darkMode} accentColor={accentColor} t={t} />
+                </div>
+              </div>
+            )}
+
+            {/* Modal Editar Saldo */}
+            {editingBalance && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setEditingBalance(false)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                  <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                    {t.initial_balance}
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.balance_prompt}</label>
+                      <input
+                        type="number"
+                        value={editBalanceAmount}
+                        onChange={(e) => setEditBalanceAmount(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setEditingBalance(false)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                                            >
+                                                {t.cancel}
+                                            </button>
+                      <button
+                        onClick={() => {
+                          if (!isNaN(editBalanceAmount)) {
+                            setInitialBalance(Number(editBalanceAmount));
+                            confetti({ particleCount: 30, spread: 50 });
+                            toast.success(t.balance_updated, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setEditingBalance(false);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                                            >
+                                                {t.save}
+                                            </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Editar Gasto */}
+            {editingExpense && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setEditingExpense(null)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                                    <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                        {t.edit_expense_title}
+                                    </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_expense_label}</label>
+                      <input
+                        type="text"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_expense_amount}</label>
+                      <input
+                        type="number"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setEditingExpense(null)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                                            >
+                                                {t.cancel}
+                                            </button>
+                      <button
+                        onClick={() => {
+                          if (editLabel && !isNaN(editAmount)) {
+                            setExpenses(expenses.map(e => e.id === editingExpense ? { ...e, label: editLabel, amount: Number(editAmount) } : e));
+                            toast.success(t.expense_updated, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setEditingExpense(null);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                                            >
+                                                {t.save}
+                                            </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Editar Suscripción */}
+            {editingSubscription && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setEditingSubscription(null)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                                    <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                        {t.edit_subscription_title}
+                                    </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_sub_name}</label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_sub_cost}</label>
+                      <input
+                        type="number"
+                        value={editCost}
+                        onChange={(e) => setEditCost(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setEditingSubscription(null)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                                            >
+                                                {t.cancel}
+                                            </button>
+                      <button
+                        onClick={() => {
+                          if (editName && !isNaN(editCost)) {
+                            setSubscriptions(subscriptions.map(s => s.id === editingSubscription ? { ...s, name: editName, cost: Number(editCost) } : s));
+                            toast.success(t.subscription_updated, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setEditingSubscription(null);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                                            >
+                                                {t.save}
+                                            </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Editar Meta */}
+            {editingGoal && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setEditingGoal(null)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                                    <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                        {t.edit_goal_title}
+                                    </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_goal_name}</label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.edit_goal_target}</label>
+                      <input
+                        type="number"
+                        value={editTarget}
+                        onChange={(e) => setEditTarget(e.target.value)}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setEditingGoal(null)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                                            >
+                                                {t.cancel}
+                                            </button>
+                      <button
+                        onClick={() => {
+                          if (editName && !isNaN(editTarget)) {
+                            setGoals(goals.map(g => g.id === editingGoal ? { ...g, name: editName, target: Number(editTarget) } : g));
+                            toast.success(t.goal_updated, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setEditingGoal(null);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                                            >
+                                                {t.save}
+                                            </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Crear Suscripción */}
+            {addingSubscription && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setAddingSubscription(false)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                                    <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                        {t.new_subscription}
+                                    </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.add_sub_name}</label>
+                      <input
+                        type="text"
+                        value={newSubName}
+                        onChange={(e) => setNewSubName(e.target.value)}
+                        placeholder={t.placeholder_subscription_example}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.add_sub_cost}</label>
+                      <input
+                        type="number"
+                        value={newSubCost}
+                        onChange={(e) => setNewSubCost(e.target.value)}
+                        placeholder="0.00"
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setAddingSubscription(false)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                      >
+                        {t.cancel}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (newSubName && !isNaN(newSubCost) && newSubCost) {
+                            setSubscriptions([...subscriptions, { id: Date.now(), name: newSubName, cost: Number(newSubCost) }]);
+                            toast.success(t.subscription_added, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setAddingSubscription(false);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                      >
+                                                {t.create}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Crear Meta */}
+            {addingGoal && (
+              <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
+                  <button 
+                    onClick={() => setAddingGoal(false)}
+                    className="absolute top-6 right-6 opacity-50 hover:opacity-100"
+                  >
+                    <X size={24} />
+                  </button>
+                                    <h2 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                                        {t.new_goal}
+                                    </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.add_goal_name}</label>
+                      <input
+                        type="text"
+                        value={newGoalName}
+                        onChange={(e) => setNewGoalName(e.target.value)}
+                        placeholder={t.placeholder_goal_example}
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold opacity-70 block mb-2">{t.add_goal_cost}</label>
+                      <input
+                        type="number"
+                        value={newGoalTarget}
+                        onChange={(e) => setNewGoalTarget(e.target.value)}
+                        placeholder="0.00"
+                        className={`w-full p-3 rounded-2xl border outline-none transition-all ${
+                          darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setAddingGoal(false)}
+                        className={`flex-1 p-3 rounded-2xl font-bold ${
+                          darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        }`}
+                      >
+                        {t.cancel}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (newGoalName && !isNaN(newGoalTarget) && newGoalTarget) {
+                            setGoals([...goals, { name: newGoalName, target: Number(newGoalTarget), id: Date.now(), completed: false }]);
+                            toast.success(t.goal_added, {
+                              style: { borderRadius: '16px', background: '#0f172a', color: '#fff' }
+                            });
+                            setAddingGoal(false);
+                          }
+                        }}
+                        style={{ backgroundColor: accentColor }}
+                        className="flex-1 p-3 rounded-2xl font-bold text-white hover:brightness-110 transition-all"
+                      >
+                                                {t.create}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
         </div>
+        <Toaster position="bottom-right" reverseOrder={false} />
+        </>
     );
 }
 

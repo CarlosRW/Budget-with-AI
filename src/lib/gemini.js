@@ -5,14 +5,29 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true 
 });
 
-// Función para extraer gastos (la que ya tenías)
-export const analyzeExpense = async (text) => {
+// Función para extraer gastos con soporte multiidioma
+export const analyzeExpense = async (text, lang = 'es') => {
+  const targetLanguage = languageNames[lang] || "Spanish";
+  
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `Eres un extractor de datos financieros. Responde con un array JSON: [{"category": "comida", "amount": -10, "label": "pizza"}]. Gastos negativos, ingresos positivos.`
+          content: `You are a financial data extractor. You must respond ONLY in ${targetLanguage}.
+
+RULES:
+- Extract all expenses and income from the user's text
+- Return a JSON array: [{"category": "food", "amount": -10, "label": "pizza"}]
+- Expenses are negative numbers, income is positive
+- "category" and "label" must be in ${targetLanguage}
+- Be concise in labels (2-4 words max)
+
+Example in ${targetLanguage}:
+${lang === 'es' ? '[{"category": "comida", "amount": -15, "label": "almuerzo"}, {"category": "transporte", "amount": -5, "label": "taxi"}]' : 
+  lang === 'en' ? '[{"category": "food", "amount": -15, "label": "lunch"}, {"category": "transport", "amount": -5, "label": "taxi"}]' :
+  lang === 'de' ? '[{"category": "essen", "amount": -15, "label": "mittagessen"}, {"category": "transport", "amount": -5, "label": "taxi"}]' :
+  '[{"category": "食物", "amount": -15, "label": "午餐"}, {"category": "交通", "amount": -5, "label": "出租车"}]'}`
         },
         { role: "user", content: text }
       ],
